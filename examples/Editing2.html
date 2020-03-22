@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet Image Transform Interactive Example</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/examples.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@0.7.7/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@0.7.7/dist/leaflet.js"></script>    
+
+	<script src="external/leaflet.draw.js"></script>
+	
+    <script src="../src/L.ImageTransform1.js"></script>
+    
+</head>
+<body>
+	<div id="map"></div>
+    
+    <div class="outer-info">
+        <span class="leaflet-bar info">Drag markers to transform; edit red polygon to clip</span>
+    </div>
+
+	<script>
+		var osmUrl = 'https://{s}.tile.osm.org/{z}/{x}/{y}.png',
+			osm = new L.TileLayer(osmUrl, {maxZoom: 18}),
+			map = new L.Map('map', {layers: [osm], center: new L.LatLng(56, 137.23), zoom: 9});
+
+        var Kvadrant = function(img, anchors, clip) {
+			this.image = L.imageTransform(img, anchors, { opacity: 0.5, clip: clipCoords, disableSetClip: false }).addTo(map);
+			this.externalPolygon = L.polygon(anchors, {fill: false}).addTo(map);
+			
+			var clipPolygon = this.clipPolygon = L.polygon(clipCoords, {fill: false, color: 'red'}).addTo(map);
+			if (!this.image.options.disableSetClip) {
+				clipPolygon.editing.enable();
+				
+				clipPolygon.on('edit', function() {
+					this.image.setClip(clipPolygon.getLatLngs());
+				}, this);
+			}
+
+			var updateAnchors = function() {
+				
+				var anchors = this.anchorMarkers.map(function(marker){ return marker.getLatLng(); })
+				this.image.setAnchors(anchors);
+				this.externalPolygon.setLatLngs(anchors);
+				clipPolygon.setLatLngs(this.image.getClip());
+				
+				//TODO: support setLatLngs() Leaflet.Draw
+				//HACK: update editing points
+				if (!this.image.options.disableSetClip) {
+					clipPolygon.editing.disable();
+					clipPolygon.editing.enable();
+				}
+			}.bind(this);
+			
+			this.anchorMarkers = anchors.map(function(anchor) {
+				return L.marker(anchor, {draggable: true}).addTo(map).on('drag', updateAnchors);
+			});
+		};
+		Kvadrant.prototype = {
+			remove: function() {
+				map.removeLayer(this.image);
+				map.removeLayer(this.clipPolygon);
+				map.removeLayer(this.externalPolygon);
+				this.anchorMarkers.forEach(function(it) {
+					map.removeLayer(it);
+				});
+			}
+		};
+		
+        var anchors = [[56.344192, 136.59558], [56.344192, 137.8782], [55.613245, 137.8782], [55.613245, 136.59558]];
+        var clipCoords = [[56.301281, 136.90579],[56.150009, 137.83902],[55.639533, 137.53169],[55.788635, 136.60979]];
+
+        var k0 = new Kvadrant('./img/image.jpg', anchors, clipCoords);
+
+
+		map.on('click', function(ev) {
+			var latlng = ev.latlng;
+			if (k0) {
+console.log('click', latlng, k0.image._anchors, k0.clipPolygon);
+				var anch = k0.image._anchors;
+				k0.remove();
+				var k1 = new Kvadrant('./img/image.jpg', [
+					[anch[0].lat, anch[0].lng], [anch[1].lat, latlng.lng], [latlng.lat, latlng.lng], [latlng.lat,  anch[3].lng]
+				], clipCoords);
+				var k2 = new Kvadrant('./img/image.jpg', [
+					[anch[0].lat, latlng.lng], [anch[1].lat, anch[1].lng], [latlng.lat, anch[2].lng], [latlng.lat, latlng.lng]
+				], clipCoords);
+				var k3 = new Kvadrant('./img/image.jpg', [
+					[latlng.lat, latlng.lng], [latlng.lat, anch[1].lng], [anch[2].lat, anch[2].lng], [anch[3].lat, latlng.lng]
+				], clipCoords);
+				var k4 = new Kvadrant('./img/image.jpg', [
+					[latlng.lat, anch[0].lng], [latlng.lat, latlng.lng], [anch[2].lat, latlng.lng], [anch[3].lat,  anch[3].lng]
+				], clipCoords);
+			}
+		});
+		
+		// add 1 points
+		var latlng = [56.344192, 136.59558];
+/*
+        var anchors1 = [[56.344192, 136.59558], [56.344192, 137.8782], [55.613245, 137.8782], [55.613245, 136.59558]];
+        var clipCoords1 = [[56.301281, 136.90579],[56.150009, 137.83902],[55.639533, 137.53169],[55.788635, 136.60979]];
+        var image1 = L.imageTransform('./img/image.jpg', anchors, { opacity: 0.5, clip: clipCoords, disableSetClip: false }).addTo(map);
+        var externalPolygon = L.polygon(anchors1, {fill: false}).addTo(map);
+        
+        var clipPolygon = L.polygon(clipCoords, {fill: false, color: 'red'}).addTo(map);
+        if (!image.options.disableSetClip) {
+            clipPolygon.editing.enable();
+            
+            clipPolygon.on('edit', function() {
+                image.setClip(clipPolygon.getLatLngs());
+            });
+        }
+
+        var updateAnchors = function() {
+            
+            var anchors = anchorMarkers.map(function(marker){ return marker.getLatLng(); })
+            image.setAnchors(anchors);
+            externalPolygon.setLatLngs(anchors);
+            clipPolygon.setLatLngs(image.getClip());
+            
+            //TODO: support setLatLngs() Leaflet.Draw
+            //HACK: update editing points
+            if (!image.options.disableSetClip) {
+                clipPolygon.editing.disable();
+                clipPolygon.editing.enable();
+            }
+        }
+        
+        var anchorMarkers = anchors.map(function(anchor) {
+            return L.marker(anchor, {draggable: true}).addTo(map).on('drag', updateAnchors);
+        });
+*/
+	</script>
+    
+    <a href="https://github.com/ScanEx/Leaflet.imageTransform" target="_blank">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png">
+    </a>
+</body>
+</html>
