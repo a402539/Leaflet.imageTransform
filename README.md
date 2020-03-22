@@ -3,7 +3,7 @@ Leaflet.imageTransform
 
 [Leaflet](http://leafletjs.com/) plugin to work with tansformed images. Transformation is defined by four anchor points on map, that correspond to corners of the image. Additionally image can be clipped by arbitrary polygon.
 
-##Demos
+## Demos
 
   * [Edit anchor points and clip polygon](//scanex.github.io/Leaflet.imageTransform/examples/Editing.html)
   * [Clip by geoJSON](//scanex.github.io/Leaflet.imageTransform/examples/geoJson.html)
