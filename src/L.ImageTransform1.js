@@ -2,6 +2,7 @@ L.ImageTransform = L.ImageOverlay.extend({
     initialize: function (url, anchors, options) { // (String, LatLngBounds, Object)
         L.ImageOverlay.prototype.initialize.call(this, url, anchors, options);
         this.setAnchors(anchors);
+        this._pixels = options.pixels;
     },
 
     setAnchors: function (anchors) {
@@ -180,12 +181,14 @@ L.ImageTransform = L.ImageOverlay.extend({
 
         div.style.width  = size.x + 'px';
         div.style.height = size.y + 'px';
-
+				if (this._pixels === null) {
+					this._pixels = [[0, 0], [w, 0], [w, h], [0, h]];					
+				}
         var matrix3d = this._matrix3d = L.ImageTransform.Utils.general2DProjection(
-            0, 0, pixels[0].x, pixels[0].y,
-            w, 0, pixels[1].x, pixels[1].y,
-            w, h, pixels[2].x, pixels[2].y,
-            0, h, pixels[3].x, pixels[3].y
+            this._pixels[0][0], this._pixels[0][1], pixels[0].x, pixels[0].y,
+            this._pixels[1][0], this._pixels[1][1], pixels[1].x, pixels[1].y,
+            this._pixels[2][0], this._pixels[2][1], pixels[2].x, pixels[2].y,
+            this._pixels[3][0], this._pixels[3][1], pixels[3].x, pixels[3].y
         );
 
         //something went wrong (for example, target image size is less then one pixel)

@@ -27,8 +27,9 @@
 			osm = new L.TileLayer(osmUrl, {maxZoom: 18}),
 			map = new L.Map('map', {layers: [osm], center: new L.LatLng(56, 137.23), zoom: 9});
 
-        var Kvadrant = function(img, anchors, clip) {
-			this.image = L.imageTransform(img, anchors, { opacity: 0.5, clip: clipCoords, disableSetClip: false }).addTo(map);
+      var Kvadrant = function(img, anchors, pixels, clip) {
+
+			this.image = L.imageTransform(img, anchors, { opacity: 0.5, pixels: pixels, clip: clipCoords, disableSetClip: false }).addTo(map);
 			this.externalPolygon = L.polygon(anchors, {fill: false}).addTo(map);
 			
 			var clipPolygon = this.clipPolygon = L.polygon(clipCoords, {fill: false, color: 'red'}).addTo(map);
@@ -73,66 +74,47 @@
         var anchors = [[56.344192, 136.59558], [56.344192, 137.8782], [55.613245, 137.8782], [55.613245, 136.59558]];
         var clipCoords = [[56.301281, 136.90579],[56.150009, 137.83902],[55.639533, 137.53169],[55.788635, 136.60979]];
 
-        var k0 = new Kvadrant('./img/image.jpg', anchors, clipCoords);
+        var k0 = new Kvadrant('./img/image.jpg', anchors,
+        	null,
+        	clipCoords);
+        
 
 
 		map.on('click', function(ev) {
 			var latlng = ev.latlng;
 			if (k0) {
-console.log('click', latlng, k0.image._anchors, k0.clipPolygon);
+				console.log('click', latlng, k0.image._anchors, k0.clipPolygon);
 				var anch = k0.image._anchors;
+				var w = k0.image._imgNode.width; var h = k0.image._imgNode.height;
+				var mp = k0.image._latLngToLayerPoint(latlng);
+				var topLeft = k0.image._latLngToLayerPoint(k0.image._bounds.getNorthWest());
+				var z = L.ImageTransform.Utils.project(k0.image._matrix3dInverse, mp.x - topLeft.x, mp.y - topLeft.y);
 				k0.remove();
 				var k1 = new Kvadrant('./img/image.jpg', [
 					[anch[0].lat, anch[0].lng], [anch[1].lat, latlng.lng], [latlng.lat, latlng.lng], [latlng.lat,  anch[3].lng]
-				], clipCoords);
+				],
+        	[[0, 0], [z.x, 0], [z.x, z.y], [0, z.y]],
+				 clipCoords);
+				 /*
 				var k2 = new Kvadrant('./img/image.jpg', [
 					[anch[0].lat, latlng.lng], [anch[1].lat, anch[1].lng], [latlng.lat, anch[2].lng], [latlng.lat, latlng.lng]
-				], clipCoords);
+				],
+        	[[z.x, 0], [w, 0], [w, z.y], [z.x, z.y]],
+				 clipCoords);
 				var k3 = new Kvadrant('./img/image.jpg', [
 					[latlng.lat, latlng.lng], [latlng.lat, anch[1].lng], [anch[2].lat, anch[2].lng], [anch[3].lat, latlng.lng]
-				], clipCoords);
+				],
+        	[[z.x, z.y], [w, z.y], [w, h], [z.x, h]],
+				 clipCoords);
 				var k4 = new Kvadrant('./img/image.jpg', [
 					[latlng.lat, anch[0].lng], [latlng.lat, latlng.lng], [anch[2].lat, latlng.lng], [anch[3].lat,  anch[3].lng]
-				], clipCoords);
+				],
+        	[[0, z.y], [z.x, z.y], [z.x, h], [0, h]],
+				 clipCoords);
+				 */
 			}
 		});
 		
-		// add 1 points
-		var latlng = [56.344192, 136.59558];
-/*
-        var anchors1 = [[56.344192, 136.59558], [56.344192, 137.8782], [55.613245, 137.8782], [55.613245, 136.59558]];
-        var clipCoords1 = [[56.301281, 136.90579],[56.150009, 137.83902],[55.639533, 137.53169],[55.788635, 136.60979]];
-        var image1 = L.imageTransform('./img/image.jpg', anchors, { opacity: 0.5, clip: clipCoords, disableSetClip: false }).addTo(map);
-        var externalPolygon = L.polygon(anchors1, {fill: false}).addTo(map);
-        
-        var clipPolygon = L.polygon(clipCoords, {fill: false, color: 'red'}).addTo(map);
-        if (!image.options.disableSetClip) {
-            clipPolygon.editing.enable();
-            
-            clipPolygon.on('edit', function() {
-                image.setClip(clipPolygon.getLatLngs());
-            });
-        }
-
-        var updateAnchors = function() {
-            
-            var anchors = anchorMarkers.map(function(marker){ return marker.getLatLng(); })
-            image.setAnchors(anchors);
-            externalPolygon.setLatLngs(anchors);
-            clipPolygon.setLatLngs(image.getClip());
-            
-            //TODO: support setLatLngs() Leaflet.Draw
-            //HACK: update editing points
-            if (!image.options.disableSetClip) {
-                clipPolygon.editing.disable();
-                clipPolygon.editing.enable();
-            }
-        }
-        
-        var anchorMarkers = anchors.map(function(anchor) {
-            return L.marker(anchor, {draggable: true}).addTo(map).on('drag', updateAnchors);
-        });
-*/
 	</script>
     
     <a href="https://github.com/ScanEx/Leaflet.imageTransform" target="_blank">
