@@ -10,6 +10,11 @@ Leaflet.imageTransform
   * [Landsat qucklooks gallery](//scanex.github.io/Leaflet.imageTransform/examples/Landsat8.html)
   * [Check search permalinks](//scanex.github.io/Leaflet.imageTransform/examples/indexImages.html?C7J8R)
 
+## Предложение эксперимента с пятой точкой внутри прямоугольника
+
+Проводим через внутреннюю точку вертикальную и горизонтальную прямые. Образуются четыре прямоугольника. В каждом из них считаем свою матрицу.
+
+Также решаем задачу разбиения на прямоугольники при любом количестве внутренниъ точек.
 
 ##Usage
 
