@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet Image Transform Interactive Example</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/examples.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@0.7.7/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@0.7.7/dist/leaflet.js"></script>    
+
+	<script src="external/leaflet.draw.js"></script>
+	
+    <script src="../src/L.ImageTransform3.js"></script>
+    
+</head>
+<body>
+	<div id="map"></div>
+    <canvas id='example'>Обновите браузер</canvas>
+    
+
+	<script>
+		var osmUrl = 'https://{s}.tile.osm.org/{z}/{x}/{y}.png',
+			osm = new L.TileLayer(osmUrl, {maxZoom: 18}),
+			map = new L.Map('map', {layers: [osm], center: new L.LatLng(56, 137.23), zoom: 9});
+
+      var Kvadrant = function(img, anchors, pixels, clip) {
+
+			this.image = L.imageTransform(img, anchors, { opacity: 0.5, pixels: pixels, clip: clipCoords, disableSetClip: false }).addTo(map);
+			this.externalPolygon = L.polygon(anchors, {fill: false}).addTo(map);
+			
+			var clipPolygon = this.clipPolygon = L.polygon(clipCoords, {fill: false, color: 'red'}).addTo(map);
+			if (!this.image.options.disableSetClip) {
+				clipPolygon.editing.enable();
+				
+				clipPolygon.on('edit', function() {
+					this.image.setClip(clipPolygon.getLatLngs());
+				}, this);
+			}
+
+			var updateAnchors = function() {
+				
+				var anchors = this.anchorMarkers.map(function(marker){ return marker.getLatLng(); })
+				this.image.setAnchors(anchors);
+				this.externalPolygon.setLatLngs(anchors);
+				clipPolygon.setLatLngs(this.image.getClip());
+				
+				//TODO: support setLatLngs() Leaflet.Draw
+				//HACK: update editing points
+				if (!this.image.options.disableSetClip) {
+					clipPolygon.editing.disable();
+					clipPolygon.editing.enable();
+				}
+			}.bind(this);
+			
+			this.anchorMarkers = anchors.map(function(anchor) {
+				return L.marker(anchor, {draggable: true}).addTo(map).on('drag', updateAnchors);
+			});
+		};
+		Kvadrant.prototype = {
+			remove: function() {
+				map.removeLayer(this.image);
+				map.removeLayer(this.clipPolygon);
+				map.removeLayer(this.externalPolygon);
+				this.anchorMarkers.forEach(function(it) {
+					map.removeLayer(it);
+				});
+			}
+		};
+		
+        var anchors = [[56.344192, 136.59558], [56.344192, 137.8782], [55.613245, 137.8782], [55.613245, 136.59558]];
+        //var clipCoords = [[56.301281, 136.90579],[56.150009, 137.83902],[55.639533, 137.53169],[55.788635, 136.60979]];
+		var clipCoords = [[60, 130],[60, 140],[50, 140],[50, 130]];
+        var k0 = new Kvadrant('./img/image.jpg', anchors,
+        	null,
+        	clipCoords);
+        
+
+
+		map.on('click', function(ev) {
+			var latlng = ev.latlng;
+			if (k0) {
+				console.log('click', latlng, k0.image._anchors, k0.clipPolygon);
+				var anch = k0.image._anchors;
+				var w = k0.image._imgNode.width; var h = k0.image._imgNode.height;
+				var mp = k0.image._latLngToLayerPoint(latlng);
+				var topLeft = k0.image._latLngToLayerPoint(k0.image._bounds.getNorthWest());
+				var z = L.ImageTransform.Utils.project(k0.image._matrix3dInverse, mp.x - topLeft.x, mp.y - topLeft.y);
+				k0.remove();
+				var k1 = new Kvadrant('./img/image.jpg', [
+					[anch[0].lat, anch[0].lng], [anch[1].lat, latlng.lng], [latlng.lat, latlng.lng], [latlng.lat,  anch[3].lng]
+				],
+        	[[0, 0], [z.x, 0], [z.x, z.y], [0, z.y]],
+				 clipCoords);
+				 /*
+				var k2 = new Kvadrant('./img/image.jpg', [
+					[anch[0].lat, latlng.lng], [anch[1].lat, anch[1].lng], [latlng.lat, anch[2].lng], [latlng.lat, latlng.lng]
+				],
+        	[[z.x, 0], [w, 0], [w, z.y], [z.x, z.y]],
+				 clipCoords);
+				var k3 = new Kvadrant('./img/image.jpg', [
+					[latlng.lat, latlng.lng], [latlng.lat, anch[1].lng], [anch[2].lat, anch[2].lng], [anch[3].lat, latlng.lng]
+				],
+        	[[z.x, z.y], [w, z.y], [w, h], [z.x, h]],
+				 clipCoords);
+				var k4 = new Kvadrant('./img/image.jpg', [
+					[latlng.lat, anch[0].lng], [latlng.lat, latlng.lng], [anch[2].lat, latlng.lng], [anch[3].lat,  anch[3].lng]
+				],
+        	[[0, z.y], [z.x, z.y], [z.x, h], [0, h]],
+				 clipCoords);
+				 */
+			}
+		});
+
+		/*
+		var example = document.getElementById('example'), // Задаём контекст
+		ctx = example.getContext('2d'), // Контекст холста
+        pic = new Image(); // "Создаём" изображение
+        // Размер холста равный 8х8 клеток
+        example.width = 1000; example.height = 1000;
+        pic.src = './img/image.jpg';
+		ax = 0.6; ay = 0.5; Ax = 0.8; Ay = 0.2;
+        pic.onload = function () { // Событие onLoad, ждём момента пока загрузится изображение
+            // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage
+            sx = 0; sy = 0; w = pic.width; h = pic.height;
+            ctx.drawImage(pic, sx, sy, w, h);
+            ctx.fillStyle= 'red'; r = 5;
+            ctx.arc(sx+ax*w-r, sy+ay*h, r, 0, 360);
+            Sx = 200; Sy = 200; W = 150; H = 200;
+            // p(x,y) -> P(X,Y)
+            // px = sx+cx*w, py = sy+cy*h
+            // Px = Sx+cx*W, Py = Sy+cy*H
+            // Px = Sx+(px-sx)*W/w, Py = Sy+(py-sy)*H/h
+            // (px, py) -> (Sx+(px-sx)*W/w, Sy+(py-sy)*H/h)
+            // матрица преобразования
+            // ( W/w  0   ) Sx-sx*W/w
+			// ( 0    H/h ) Sy-sy*H/h
+            ctx.setTransform(1/3,.8,.7,1/2,20,40);
+            ctx.drawImage(pic, sx, sy, ax*w, ay*h, Sx, Sy, Ax*W, Ay*H);
+            ctx.drawImage(pic, sx+ax*w, sy, (1-ax)*w, ay*h, Sx+Ax*W, Sy, (1-Ax)*W, Ay*H);
+            ctx.drawImage(pic, sx, sy+ay*h, ax*w, (1-ay)*h, Sx, Sy+Ay*H, Ax*W, (1-Ay)*H);
+            ctx.drawImage(pic, sx+ax*w, sy+ay*h, (1-ax)*w, (1-ay)*h, Sx+Ax*W, Sy+Ay*H, (1-Ax)*W, (1-Ay)*H);
+			ctx.arc(Sx+Ax*W-r, Sy+Ay*H, r, 0, 360);
+            ctx.fill();
+        }
+		*/
+	</script>
+    
+</body>
+</html>
