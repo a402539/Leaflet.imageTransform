@@ -276,15 +276,14 @@ L.ImageTransform = L.ImageOverlay.extend({
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             //ctx.fillStyle = ctx.createPattern(this._imgNode, 'no-repeat');
-            ax = 0.2; ay = 0.1; Ax = 0.8; Ay = 0.2;
             sx = 0; sy = 0; w = this._imgNode.width; h = this._imgNode.height;
             //ctx.drawImage(pic, sx, sy, w, h);
-            ctx.beginPath();
-            ctx.fillStyle = 'red'; r = 5;
-            ctx.arc(sx + ax * w - r, sy + ay * h, r, 0, 360);
-            ctx.closePath();
+            //ctx.beginPath();
+            r = 5;
+            //ctx.closePath();
             ctx.fill();
             Sx = 0; Sy = 0; W = cw; H = ch;
+            ax = 0.2; ay = 0.1; Ax = ax + 20/W; Ay = ay + 20/H;
             // p(x,y) -> P(X,Y)
             // px = sx+cx*w, py = sy+cy*h
             // Px = Sx+cx*W, Py = Sy+cy*H
@@ -293,22 +292,21 @@ L.ImageTransform = L.ImageOverlay.extend({
             // матрица преобразования
             // ( W/w  0   ) Sx-sx*W/w
             // ( 0    H/h ) Sy-sy*H/h
-            //ctx.setTransform(1 / 3, .8, .7, 1 / 2, 20, 40);
-            ctx.beginPath();
-            ctx.fillStyle = 'green';
-            ctx.arc(Sx + Ax * W - r, Sy + Ay * H, r, 0, 360);
+            ctx.setTransform(W / w, 0, 0, H / h, Sx - sx * W / w, Sy - sy * H / h);
             console.log(pic, sx, sy, ax * w, ay * h, Sx, Sy, Ax * W, Ay * H);
             ctx.drawImage(pic, sx, sy, ax * w, ay * h, Sx, Sy, Ax * W, Ay * H);
-            ctx.closePath();
-            ctx.fill();
-            /*
+            
             ctx.drawImage(pic, sx + ax * w, sy, (1 - ax) * w, ay * h, Sx + Ax * W, Sy, (1 - Ax) * W, Ay * H);
-            ctx.fill();
+            
             ctx.drawImage(pic, sx, sy + ay * h, ax * w, (1 - ay) * h, Sx, Sy + Ay * H, Ax * W, (1 - Ay) * H);
-            ctx.fill();
             ctx.drawImage(pic, sx + ax * w, sy + ay * h, (1 - ax) * w, (1 - ay) * h, Sx + Ax * W, Sy + Ay * H, (1 - Ax) * W, (1 - Ay) * H);
+            ctx.fillStyle = 'red';
+            ctx.arc(sx + ax * w - r, sy + ay * h, r, 0, 360);
             ctx.fill();
-            */
+            ctx.fillStyle = 'green';
+            ctx.arc(Sx + Ax * W - r, Sy + Ay * H, r, 0, 360);
+            ctx.fill();
+            
             /*
             for (var i = 0, len = this._pixelClipPoints.length; i < len; i++) {
 				ctx.beginPath();
