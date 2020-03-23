@@ -183,6 +183,7 @@ L.ImageTransform = L.ImageOverlay.extend({
             p = this._latLngToLayerPoint(anchors[i]);
             pixels.push(L.point(p.x - topLeft.x, p.y - topLeft.y));
         }
+		this._anch_pixels = pixels;					
 
         L.DomUtil.setPosition(div, topLeft);
 
@@ -266,19 +267,24 @@ L.ImageTransform = L.ImageOverlay.extend({
     _drawCanvas: function () {
         if (!this._clipDone && this._imgNode) {
             var canvas = this._canvas,
-                ctx = canvas.getContext('2d'),
+				cw = this._anch_pixels[1].x - this._anch_pixels[0].x,
+				ch = this._anch_pixels[2].y - this._anch_pixels[1].y;
+			canvas.width = cw;
+			canvas.height = ch;
+            var ctx = canvas.getContext('2d'),
                 pic = this._imgNode;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             //ctx.fillStyle = ctx.createPattern(this._imgNode, 'no-repeat');
             ax = 0.2; ay = 0.1; Ax = 0.8; Ay = 0.2;
-            sx = 0; sy = 0; w = canvas.width; h = canvas.height;
+            sx = 0; sy = 0; w = this._imgNode.width; h = this._imgNode.height;
             //ctx.drawImage(pic, sx, sy, w, h);
             ctx.fillStyle = 'red'; r = 5;
             ctx.arc(sx + ax * w - r, sy + ay * h, r, 0, 360);
             Sx = 0;
             Sy = 0;
-            W = canvas.width;
-            H = canvas.height;
+            W = cw;
+            H = ch;
             // p(x,y) -> P(X,Y)
             // px = sx+cx*w, py = sy+cy*h
             // Px = Sx+cx*W, Py = Sy+cy*H
