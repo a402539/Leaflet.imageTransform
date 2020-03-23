@@ -275,7 +275,10 @@ L.ImageTransform = L.ImageOverlay.extend({
             //ctx.drawImage(pic, sx, sy, w, h);
             ctx.fillStyle = 'red'; r = 5;
             ctx.arc(sx + ax * w - r, sy + ay * h, r, 0, 360);
-            Sx = 200; Sy = 200; W = 150; H = 200;
+            Sx = 0;
+            Sy = 0;
+            W = canvas.width;
+            H = canvas.height;
             // p(x,y) -> P(X,Y)
             // px = sx+cx*w, py = sy+cy*h
             // Px = Sx+cx*W, Py = Sy+cy*H
@@ -296,6 +299,8 @@ L.ImageTransform = L.ImageOverlay.extend({
             ctx.fill();
             ctx.drawImage(pic, sx + ax * w, sy + ay * h, (1 - ax) * w, (1 - ay) * h, Sx + Ax * W, Sy + Ay * H, (1 - Ax) * W, (1 - Ay) * H);
             ctx.fill();
+            */
+            /*
             for (var i = 0, len = this._pixelClipPoints.length; i < len; i++) {
 				ctx.beginPath();
 				for (var j = 0, len1 = this._pixelClipPoints[i].length; j < len1; j++) {
