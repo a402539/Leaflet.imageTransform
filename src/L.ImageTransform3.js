@@ -279,12 +279,12 @@ L.ImageTransform = L.ImageOverlay.extend({
             ax = 0.2; ay = 0.1; Ax = 0.8; Ay = 0.2;
             sx = 0; sy = 0; w = this._imgNode.width; h = this._imgNode.height;
             //ctx.drawImage(pic, sx, sy, w, h);
+            ctx.beginPath();
             ctx.fillStyle = 'red'; r = 5;
             ctx.arc(sx + ax * w - r, sy + ay * h, r, 0, 360);
-            Sx = 0;
-            Sy = 0;
-            W = cw;
-            H = ch;
+            ctx.closePath();
+            ctx.fill();
+            Sx = 0; Sy = 0; W = cw; H = ch;
             // p(x,y) -> P(X,Y)
             // px = sx+cx*w, py = sy+cy*h
             // Px = Sx+cx*W, Py = Sy+cy*H
@@ -294,9 +294,12 @@ L.ImageTransform = L.ImageOverlay.extend({
             // ( W/w  0   ) Sx-sx*W/w
             // ( 0    H/h ) Sy-sy*H/h
             //ctx.setTransform(1 / 3, .8, .7, 1 / 2, 20, 40);
+            ctx.beginPath();
+            ctx.fillStyle = 'green';
             ctx.arc(Sx + Ax * W - r, Sy + Ay * H, r, 0, 360);
             console.log(pic, sx, sy, ax * w, ay * h, Sx, Sy, Ax * W, Ay * H);
             ctx.drawImage(pic, sx, sy, ax * w, ay * h, Sx, Sy, Ax * W, Ay * H);
+            ctx.closePath();
             ctx.fill();
             /*
             ctx.drawImage(pic, sx + ax * w, sy, (1 - ax) * w, ay * h, Sx + Ax * W, Sy, (1 - Ax) * W, Ay * H);
